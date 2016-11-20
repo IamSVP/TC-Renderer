@@ -1,0 +1,30 @@
+#ifndef __SHADER_PROGS__
+#define __SHADER_PROGS__
+
+const char *vVertexProg =
+        "#version 310 es\n"
+                "precision mediump float;\n"
+
+
+                "in vec3 position;\n"
+                "in vec2 texCoord;\n"
+                "out vec2 uv;\n"
+                "uniform mat4 MVP;\n"
+                "void main() {\n"
+                "  gl_Position =  MVP*vec4(position, 1.0);\n"
+                "  uv = texCoord;\n"
+                "}\n";
+
+const char *vFragProg =
+        "#version 310 es\n"
+                "precision mediump float;\n"
+                "in vec2 uv;\n"
+                "uniform sampler2D tex;\n"
+                "out vec4 color;\n"
+                "void main() {\n"
+                "  color = vec4(texture(tex, uv).rgb, 1);\n"
+                "   //color = vec4(1.0, 0.0, 0.0, 1.0);\n"
+                "}\n";
+
+
+#endif

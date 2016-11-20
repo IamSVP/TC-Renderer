@@ -20,21 +20,27 @@ cmake_minimum_required(VERSION 3.4.1)
 add_library(app-glue STATIC
             ${ANDROID_NDK}/sources/android/native_app_glue/android_native_app_glue.c)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11 -Wall -fno-exceptions -fno-rtti")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -fno-exceptions -fno-rtti")
+
 
 # build the ndk-helper library
 set(ndk_helper_dir ../../../../common/ndk_helper)
 add_subdirectory(${ndk_helper_dir} ndk_helper)
+add_subdirectory(MPTCDecoder)
 
 # now build app's shared lib
 add_library(TeapotNativeActivity SHARED
+            SphereRenderer.cpp
             TeapotNativeActivity.cpp
             TeapotRenderer.cpp)
 
 target_include_directories(TeapotNativeActivity PRIVATE
                            ${ANDROID_NDK}/sources/android/cpufeatures
                            ${ANDROID_NDK}/sources/android/native_app_glue
-                           ${ndk_helper_dir})
+                           ${ndk_helper_dir}
+                           "MPTCDecoder/"
+                           abc
+                           )
 
 # add lib dependencies
 target_link_libraries(TeapotNativeActivity
@@ -42,6 +48,10 @@ target_link_libraries(TeapotNativeActivity
                       app-glue
                       atomic
                       EGL
-                      GLESv2
+                      GLESv3
                       log
-                      ndk-helper)
+                      ndk-helper
+                      mptc_decoder
+                      )
+
+

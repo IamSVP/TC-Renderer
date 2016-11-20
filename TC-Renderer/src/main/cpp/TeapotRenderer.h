@@ -30,7 +30,7 @@
 #include <vector>
 
 #include <EGL/egl.h>
-#include <GLES/gl.h>
+#include <GLES3/gl31.h>
 
 #include <android/sensor.h>
 #include <android/log.h>
@@ -99,5 +99,6 @@ class TeapotRenderer {
   void Unload();
   void UpdateViewport();
 };
+
 
 #endif

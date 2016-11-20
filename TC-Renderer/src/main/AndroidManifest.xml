@@ -3,21 +3,24 @@
           android:versionCode="1"
           android:versionName="1.0" >
 
-  <uses-feature android:glEsVersion="0x00020000"></uses-feature>
-
+  <uses-feature android:glEsVersion="0x00031000"></uses-feature>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <supports-gl-texture android:name="GL_OES_compressed_ETC1_RGB8_texture" />
   <application
       android:allowBackup="false"
       android:fullBackupContent="false"
+      android:debuggable="false"
       android:supportsRtl="true"
       android:icon="@mipmap/ic_launcher"
       android:label="@string/app_name"
       android:theme="@style/AppTheme"
-      android:name="com.sample.teapot.TeapotApplication"
+      android:name="com.sample.teapot.Sphere360Application"
       >
 
     <!-- Our activity is the built-in NativeActivity framework class.
          This will take care of integrating with our NDK code. -->
-    <activity android:name="com.sample.teapot.TeapotNativeActivity"
+    <activity android:name="com.sample.teapot.SceneNativeActivity"
               android:label="@string/app_name"
               android:configChanges="orientation|keyboardHidden">
       <!-- Tell NativeActivity the name of or .so -->

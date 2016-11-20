@@ -1,6 +1,5 @@
 add_library(ndk-helper STATIC 
             gestureDetector.cpp
-            gl3stub.c
             GLContext.cpp
             interpolator.cpp
             JNIHelper.cpp
@@ -9,5 +8,7 @@ add_library(ndk-helper STATIC
             tapCamera.cpp
             vecmath.cpp)
 
+target_link_libraries(ndk-helper GLESv3)
 target_include_directories(ndk-helper PRIVATE
                            ${ANDROID_NDK}/sources/android/native_app_glue)
+

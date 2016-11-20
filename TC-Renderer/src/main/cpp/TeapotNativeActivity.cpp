@@ -27,6 +27,7 @@
 #include <cpu-features.h>
 
 #include "TeapotRenderer.h"
+#include "SphereRenderer.h"
 #include "NDKHelper.h"
 
 //-------------------------------------------------------------------------
@@ -39,8 +40,8 @@
 //-------------------------------------------------------------------------
 struct android_app;
 class Engine {
-  TeapotRenderer renderer_;
-
+  //TeapotRenderer renderer_;
+  SphereRenderer renderer_;
   ndk_helper::GLContext* gl_context_;
 
   bool initialized_resources_;
@@ -108,7 +109,8 @@ Engine::~Engine() {}
  * Load resources
  */
 void Engine::LoadResources() {
-  renderer_.Init();
+  //renderer_.Init();
+  renderer_.Init("/storage/emulated/0/GenTcAssets");
   renderer_.Bind(&tap_camera_);
 }
 
@@ -146,7 +148,7 @@ int Engine::InitDisplay() {
   renderer_.UpdateViewport();
 
   tap_camera_.SetFlip(1.f, -1.f, -1.f);
-  tap_camera_.SetPinchTransformFactor(2.f, 2.f, 8.f);
+  tap_camera_.SetPinchTransformFactor(1.f, 1.f, 4.f);
 
   return 0;
 }

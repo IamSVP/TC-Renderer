@@ -22,7 +22,6 @@
 //--------------------------------------------------------------------------------
 #include <unistd.h>
 #include "GLContext.h"
-#include "gl3stub.h"
 
 namespace ndk_helper {
 
@@ -32,7 +31,13 @@ namespace ndk_helper {
 
 //--------------------------------------------------------------------------------
 // Ctor
-//--------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------a
+
+
+    static GLboolean gl3stubInit() {
+      return GL_TRUE;
+    }
+
 GLContext::GLContext()
     : display_(EGL_NO_DISPLAY),
       surface_(EGL_NO_SURFACE),
@@ -51,6 +56,7 @@ void GLContext::InitGLES() {
   const char* versionStr = (const char*)glGetString(GL_VERSION);
   if (strstr(versionStr, "OpenGL ES 3.") && gl3stubInit()) {
     es3_supported_ = true;
+    LOGE("here...gles3\n");
     gl_version_ = 3.0f;
   } else {
     gl_version_ = 2.0f;

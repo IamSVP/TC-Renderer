@@ -17,7 +17,7 @@
 #pragma once
 #include <vector>
 #include <string>
-#include <GLES2/gl2.h>
+#include <GLES3/gl31.h>
 
 #include "JNIHelper.h"
 #include "vecmath.h"
