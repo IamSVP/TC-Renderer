@@ -9,7 +9,7 @@
 #include <cassert>
 #include "NDKHelper.h"
 
-#ifdef DEBUG
+#ifndef NDEBUG
 
 static const char* getGLErrString(GLenum err){
 

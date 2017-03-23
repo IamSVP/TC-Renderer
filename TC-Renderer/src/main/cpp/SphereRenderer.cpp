@@ -15,6 +15,34 @@
 //TODO:: USE enums to set the texture data
 //TODO:: Write all the functions from the initial data
 
+typedef struct {
+int fd;
+AMediaExtractor* ex;
+AMediaCodec *codec;
+int64_t renderstart;
+bool sawInputEOS;
+bool sawOutputEOS;
+bool isPlaying;
+bool renderonce;
+} workerdata;
+
+workerdata worker_data = {-1, NULL, NULL, 0, false, false, false, false};
+workerdata *d;
+
+int64_t systemnanotime() {
+  timespec now;
+  clock_gettime(CLOCK_MONOTONIC, &now);
+  return now.tv_sec * 1000000000LL + now.tv_nsec;
+}
+
+static double GetAverageTimeMS(const std::vector<uint64_t> &times) {
+	double sum = 0.0;
+	for (const auto &t : times) {
+		sum += static_cast<double>(t) / 1e6;
+	}
+	return sum / static_cast<double>(times.size());
+}
+
 SphereRenderer::SphereRenderer() { }
 
 void SphereRenderer::UpdateViewport() {
@@ -135,13 +163,69 @@ void SphereRenderer::InitializeMPTCTexture() {
   ptr_buffer_struct = new BufferStruct();
   ptr_decode_info->is_start = true;
   _mptc_stream.open(_mptc_file_path.c_str(), std::ios::binary);
-  //InitBufferedDecode(6, ptr_buffer_struct, _mptc_stream, _num_blocks);
+  InitBufferedDecode(7, ptr_buffer_struct, _mptc_stream, _num_blocks);
 
   //fp_mptc = fopen(_mptc_file_path.c_str(), "rb");
   LOGE("Called load Texture Data,,,,,");
 }
 
+void SphereRenderer::InitializeMPEGTexture() {
 
+  CHECK_GL(glGenTextures, 1, &_texture_id);
+  CHECK_GL(glBindTexture, GL_TEXTURE_2D, _texture_id);
+  // CHECK_GL(glTexImage2D, GL_TEXTURE_2D,0,GL_RGBA8UI, vImageWidth, vImageHeight,0,GL_RGBA_INTEGER,GL_UNSIGNED_BYTE,NULL);
+  CHECK_GL(glTexStorage2D, GL_TEXTURE_2D, 1, GL_RGBA8,vImage_width, vImage_height );
+  CHECK_GL(glTexParameteri,GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+  CHECK_GL(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  CHECK_GL(glBindImageTexture, 2, _texture_id, 0, GL_FALSE,0, GL_WRITE_ONLY, GL_RGBA8UI); // possible error
+  CHECK_GL(glBindTexture, GL_TEXTURE_2D, 0);
+
+  int fd = open(_mpeg_file_path.c_str(), O_RDONLY);
+  worker_data.fd = fd;
+
+  d = &worker_data;
+
+  AMediaExtractor *ex = AMediaExtractor_new();
+  media_status_t err = AMediaExtractor_setDataSourceFd(ex, d->fd, 0 , LONG_MAX);
+  close(d->fd);
+  if (err != AMEDIA_OK) {
+    LOGE("setDataSource error: %d", err);
+  }
+  int numtracks = AMediaExtractor_getTrackCount(ex);
+
+  AMediaCodec *codec = NULL;
+
+  LOGI("input has %d tracks", numtracks);
+
+  for (int i = 0; i <= 0; i++) {
+    AMediaFormat *format = AMediaExtractor_getTrackFormat(ex, i);
+    const char *s = AMediaFormat_toString(format);
+    LOGI("track %d format: %s", i, s);
+    const char *mime;
+    if (!AMediaFormat_getString(format, AMEDIAFORMAT_KEY_MIME, &mime)) {
+      LOGI("no mime type %s\n", mime);
+//            return JNI_FALSE;
+    } else if (!strncmp(mime, "video/", 6)) {
+      // Omitting most error handling for clarity.
+      // Production code should check for errors.
+      AMediaExtractor_selectTrack(ex, i);
+      codec = AMediaCodec_createDecoderByType(mime);
+      AMediaCodec_configure(codec, format, NULL, NULL, 0);
+
+      d->ex = ex;
+      d->codec = codec;
+      d->renderstart = -1;
+      d->sawInputEOS = false;
+      d->sawOutputEOS = false;
+      d->isPlaying = false;
+      d->renderonce = true;
+      AMediaCodec_start(codec);
+    }
+    AMediaFormat_delete(format);
+  }
+
+
+}
 void SphereRenderer::LoadTextureDataASTC4x4() {
 
   unsigned char *blocks;
@@ -209,16 +293,13 @@ void SphereRenderer::LoadTextureDataMPTC() {
   //******************************************//
   //*****************************************//
   //LOGE("Called load Texture Data");
-  std::chrono::high_resolution_clock::time_point CPUDecode_Start = std::chrono::high_resolution_clock::now();
-  GetFrameMultiThread(_mptc_stream,
-                      prev_dxt,
-                      curr_dxt,
-                      ptr_decode_info);
-  //GetFrame(_mptc_stream, prev_dxt, curr_dxt, ptr_decode_info);
 
-  std::chrono::high_resolution_clock::time_point CPUDecode_End = std::chrono::high_resolution_clock::now();
-  std::chrono::nanoseconds CPUDecode_Time = std::chrono::duration_cast<std::chrono::nanoseconds>(CPUDecode_End - CPUDecode_Start);
-  m_CPUDecode.push_back(CPUDecode_Time.count());
+//  GetFrameMultiThread(_mptc_stream,
+//                      prev_dxt,
+//                      curr_dxt,
+//                      ptr_decode_info);
+//  GetFrame(_mptc_stream, prev_dxt, curr_dxt, ptr_decode_info);
+
 
 
   std::chrono::high_resolution_clock::time_point GPULoad_Start = std::chrono::high_resolution_clock::now();
@@ -232,12 +313,20 @@ void SphereRenderer::LoadTextureDataMPTC() {
            _texture_width*_texture_height / 2, // Type of texture data
            //ptr_buffer_struct->buffered_dxts[ptr_buffer_struct->curr_dxt_idx]);
            curr_dxt);
-
-  LOGE("curr_dxt id value:%d\n", ptr_buffer_struct->curr_dxt_idx);
-  //GetBufferedFrame(ptr_buffer_struct, curr_dxt, _mptc_stream);
   std::chrono::high_resolution_clock ::time_point GPULoad_End = std::chrono::high_resolution_clock::now();
   std::chrono::nanoseconds GPULoad_Time = std::chrono::duration_cast<std::chrono::nanoseconds>(GPULoad_End - GPULoad_Start);
   m_GPULoad.push_back(GPULoad_Time.count());
+
+
+  LOGE("curr_dxt id value:%d\n", ptr_buffer_struct->curr_dxt_idx);
+
+
+  std::chrono::high_resolution_clock::time_point CPUDecode_Start = std::chrono::high_resolution_clock::now();
+  GetBufferedFrame(ptr_buffer_struct, curr_dxt, _mptc_stream);
+  std::chrono::high_resolution_clock::time_point CPUDecode_End = std::chrono::high_resolution_clock::now();
+  std::chrono::nanoseconds CPUDecode_Time = std::chrono::duration_cast<std::chrono::nanoseconds>(CPUDecode_End - CPUDecode_Start);
+  m_CPUDecode.push_back(CPUDecode_Time.count());
+
 
   // CHECK_GL(glBindBuffer, GL_PIXEL_UNPACK_BUFFER, 0);
   // ALOGE("fooooddd here\n");
@@ -246,32 +335,27 @@ void SphereRenderer::LoadTextureDataMPTC() {
   //curr_dxt = temp_dxt;
   CHECK_GL(glBindTexture, GL_TEXTURE_2D, 0);
 
-
 }
+
 void SphereRenderer::LoadTextureDataJPG() {
-
-
   char img_path[256];
   //sprintf(img_path, "%s/360MegaCoaster720/JPG/360MegaCoaster720%06d.jpg",_texture_path.c_str(),_texture_number);
-  sprintf(img_path, "%s/360Shark2K/360Shark2K%04d.jpg", _texture_path.c_str(), _texture_number);
+  sprintf(img_path, "%s/360MegaC2K/JPG/360MegaC2K%03d.jpg", _texture_path.c_str(), _texture_number);
   LOGE("Path%s", img_path);
   int w,h,n;
-
+  std::chrono::high_resolution_clock::time_point CPUDecode_Start = std::chrono::high_resolution_clock::now();
   unsigned char *ImageDataPtr = (unsigned char *)malloc((_texture_height * _texture_width * 4));
   FILE *fp = fopen(img_path, "rb");
 
 
   //CPU LOADING.....
-  std::chrono::high_resolution_clock::time_point CPULoad_Start = std::chrono::high_resolution_clock::now();
   fread(ImageDataPtr, 1, _texture_height * _texture_width * 4, fp);
   std::chrono::high_resolution_clock::time_point CPULoad_End = std::chrono::high_resolution_clock::now();
 
-  std::chrono::nanoseconds CPULoad_Time = std::chrono::duration_cast<std::chrono::nanoseconds>(CPULoad_End - CPULoad_Start);
-  m_CPULoad.push_back(CPULoad_Time.count());
 
 
   // CPU Decoding.....
-  std::chrono::high_resolution_clock::time_point CPUDecode_Start = std::chrono::high_resolution_clock::now();
+
   unsigned char *TextureData = stbi_load_from_memory(ImageDataPtr, (_texture_height * _texture_width * 4), &w, &h, &n, 4);
   std::chrono::high_resolution_clock::time_point CPUDecode_End = std::chrono::high_resolution_clock::now();
 
@@ -305,6 +389,111 @@ void SphereRenderer::LoadTextureDataJPG() {
 
 }
 void SphereRenderer::LoadTextureDataPBO() { }
+void SphereRenderer::LoadTextureDataMPEG() {
+
+  ssize_t bufidx = -1;
+  ssize_t outbufidx = -1;
+  uint8_t *TextureData = NULL;
+  size_t TexSz = 0;
+
+  std::chrono::high_resolution_clock::time_point CPU_start =
+    std::chrono::high_resolution_clock::now();
+
+  if (!d->sawInputEOS) {
+    bufidx = AMediaCodec_dequeueInputBuffer(d->codec, -1);
+    LOGE("input buffer %zd---------", bufidx);
+    if (bufidx >= 0) {
+
+      size_t bufsize;
+      uint8_t *buf = AMediaCodec_getInputBuffer(d->codec, bufidx, &bufsize);
+      ssize_t sampleSize = AMediaExtractor_readSampleData(d->ex, buf, bufsize);
+
+      if (sampleSize < 0) {
+        sampleSize = 0;
+        d->sawInputEOS = true;
+        LOGI("EOS");
+      }
+
+      int64_t presentationTimeUs = AMediaExtractor_getSampleTime(d->ex);
+
+      AMediaCodec_queueInputBuffer(d->codec, bufidx, 0, sampleSize, presentationTimeUs,
+                                   d->sawInputEOS ? AMEDIACODEC_BUFFER_FLAG_END_OF_STREAM : 0);
+      LOGE("sample size buffer %zd----------------", sampleSize);
+
+      AMediaExtractor_advance(d->ex);
+    }
+
+
+  }
+
+  if (!d->sawOutputEOS) {
+    AMediaCodecBufferInfo info;
+    LOGE("fucking waiting here...\n");
+    ssize_t status = AMediaCodec_dequeueOutputBuffer(d->codec, &info, 0);
+
+    if (status >= 0) {
+      if (info.flags & AMEDIACODEC_BUFFER_FLAG_END_OF_STREAM) {
+        LOGI("output EOS");
+        d->sawOutputEOS = true;
+      }
+      TextureData = AMediaCodec_getOutputBuffer(d->codec, status, &TexSz);
+      AMediaCodec_releaseOutputBuffer(d->codec, status, info.size != 0);
+      int64_t presentationNano = info.presentationTimeUs * 1000;
+      if (d->renderstart < 0) {
+        d->renderstart = systemnanotime() - presentationNano;
+      }
+      int64_t delay = (d->renderstart + presentationNano) - systemnanotime();
+      if (delay > 0) {
+        usleep(delay / 1000);
+      }
+
+      if (d->renderonce) {
+        d->renderonce = false;
+        return;
+      }
+      std::chrono::high_resolution_clock::time_point CPU_end =
+      std::chrono::high_resolution_clock::now();
+
+      std::chrono::nanoseconds cpu_load =
+      std::chrono::duration_cast<std::chrono::nanoseconds>(CPU_end - CPU_start);
+      m_CPUDecode.push_back(cpu_load.count());
+      // GPU Loading........
+      GLuint64 gpu_load_time;
+
+      LOGI("Checking frame size %lld\n", TexSz);
+      std::chrono::high_resolution_clock::time_point GPULoad_Start = std::chrono::high_resolution_clock::now();
+      CHECK_GL(glBindTexture, GL_TEXTURE_2D, _texture_id);
+
+      CHECK_GL(glTexSubImage2D, GL_TEXTURE_2D,
+               0,
+               0, 0,
+               _texture_width,
+               _texture_height,
+               GL_RGBA,
+               GL_UNSIGNED_BYTE,
+               TextureData);
+      std::chrono::high_resolution_clock::time_point GPULoad_End = std::chrono::high_resolution_clock::now();
+      std::chrono::nanoseconds GPULoad_Time = std::chrono::duration_cast<std::chrono::nanoseconds>(
+      GPULoad_End - GPULoad_Start);
+      m_GPULoad.push_back(GPULoad_Time.count());
+
+      CHECK_GL(glBindTexture, GL_TEXTURE_2D, 0);
+    } else if (status == AMEDIACODEC_INFO_OUTPUT_BUFFERS_CHANGED) {
+      LOGI("output buffers changed");
+    } else if (status == AMEDIACODEC_INFO_OUTPUT_FORMAT_CHANGED) {
+      AMediaFormat *format = NULL;
+      format = AMediaCodec_getOutputFormat(d->codec);
+      LOGI("format changed to: %s", AMediaFormat_toString(format));
+      AMediaFormat_delete(format);
+    } else if (status == AMEDIACODEC_INFO_TRY_AGAIN_LATER) {
+      LOGI("no output buffer right now");
+    } else {
+      LOGI("unexpected info code: %zd", status);
+    }
+
+  }
+
+}
 
 void SphereRenderer::InitializeTexture(TC_TYPES curr_type) {
 
@@ -330,6 +519,9 @@ void SphereRenderer::InitializeTexture(TC_TYPES curr_type) {
       break;
     case CRN:
       InitializeCRNTexture();
+      break;
+    case MPEG:
+      InitializeMPEGTexture();
       break;
   }
 
@@ -358,6 +550,9 @@ void SphereRenderer::LoadTexture(TC_TYPES curr_type) {
     case CRN:
       LoadTextureDataCRN();
       break;
+    case MPEG:
+      LoadTextureDataMPEG();
+      break;
   }
 }
 
@@ -372,7 +567,7 @@ void SphereRenderer::LoadShaders(const char *vertex_shader, const char *frag_sha
   CHECK_GL(glCompileShader, verShdrId);
 
   // check vertex shader
-#ifdef DEBUG
+#ifndef NDEBUG
   int result, logLength;
   CHECK_GL(glGetShaderiv, verShdrId, GL_COMPILE_STATUS, &result);
 
@@ -387,9 +582,10 @@ void SphereRenderer::LoadShaders(const char *vertex_shader, const char *frag_sha
   // create the fragment shader
   CHECK_GL(glShaderSource, fragShdrId, 1, &vFragProg, NULL);
   CHECK_GL(glCompileShader, fragShdrId);
-  CHECK_GL(glGetShaderiv, fragShdrId, GL_COMPILE_STATUS, &result);
 
-#ifdef DEBUG
+
+#ifndef NDEBUG
+  CHECK_GL(glGetShaderiv, fragShdrId, GL_COMPILE_STATUS, &result);
   if(result != GL_TRUE)
   {
     CHECK_GL(glGetShaderiv, fragShdrId, GL_INFO_LOG_LENGTH, &logLength);
@@ -404,7 +600,7 @@ void SphereRenderer::LoadShaders(const char *vertex_shader, const char *frag_sha
   CHECK_GL(glAttachShader, _program_id, fragShdrId);
   CHECK_GL(glLinkProgram, _program_id);
 
-#ifdef  DEBUG
+#ifndef  NDEBUG
   CHECK_GL(glGetProgramiv, _program_id, GL_LINK_STATUS, &result);
   if(result != GL_TRUE){
 
@@ -446,12 +642,13 @@ void SphereRenderer::Init(const char* storage_path) {
   _obj_path = std::string(storage_path) + "/Obj/sphere.obj";
   _metrics_path = std::string(storage_path) + "/output.txt";
 #ifndef  NDEBUG
-  LOGE("Still in debug mode!");
+  LOGI("Still in debug mode!");
 #endif
    //TODO:: ADD MPTC file paths and input streamsa
    //Set MPTC pointers to NULL. Set the initializations in LoadTexture()
   _mptc_file_path = std::string(storage_path) + "/MPTC/360MegaC2K_16_50.mpt";
   LOGE("MPTC PATH %s\n", _mptc_file_path.c_str());
+  _mpeg_file_path = std::string(storage_path) + "/dongtan_day.mp4";
 
   ptr_buffer_struct = NULL;
   fp_mptc = NULL;
@@ -478,6 +675,7 @@ void SphereRenderer::Init(const char* storage_path) {
   InitializeScene();
   InitializeTexture(_curr_TC_type);
   UpdateViewport();
+  CHECK_GL(glGenQueries, 2, GPULoadQuery);
 
   _mat_model = ndk_helper::Mat4::Translation(0, 0, 0.f);
 
@@ -493,7 +691,8 @@ void SphereRenderer::Init(const char* storage_path) {
   _tex_loc = CHECK_GL(glGetUniformLocation, _program_id, "tex");
   assert ( _tex_loc >= 0 );
 
-
+  load_texture = true;
+  load_count = 1;
 
 
 }
@@ -509,12 +708,24 @@ SphereRenderer::~SphereRenderer() {
 }
 
 void SphereRenderer::Render() {
-
+  std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
   // Feed Projection and Model View matrices to the shaders
   ndk_helper::Mat4 mat_vp = _mat_projection * _mat_view;
   //_texture_number = 5;
   _texture_number = (_texture_number + 1) % vMax_tex_count + 1;
-  LoadTexture(_curr_TC_type);
+  static bool first_frame = true;
+  if(load_texture)
+    LoadTexture(_curr_TC_type);
+
+  if(_curr_TC_type == TC_TYPES::MPTC) {
+    load_texture = false;
+    load_count++;
+    if (load_count > 10) {
+      load_count = 1;
+      load_texture = true;
+    }
+  }
+
   CHECK_GL(glUseProgram, _program_id);
   CHECK_GL(glClear, GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
   CHECK_GL(glUniformMatrix4fv, _matrix_id, 1, GL_FALSE, mat_vp.Ptr());
@@ -536,7 +747,9 @@ void SphereRenderer::Render() {
   CHECK_GL(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, _index_buffer);
   CHECK_GL(glDrawElements, GL_TRIANGLES, _num_indices , GL_UNSIGNED_SHORT, NULL);
   LOGE("Num indices %d\n", _num_indices);
-
+  std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+  std::chrono::nanoseconds frame_time = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
+  m_TotalFps.push_back(frame_time.count());
 
   CHECK_GL(glDisableVertexAttribArray,_pos_loc);
   CHECK_GL(glDisableVertexAttribArray,_uv_loc);
@@ -544,6 +757,36 @@ void SphereRenderer::Render() {
   CHECK_GL(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, 0);
   CHECK_GL(glBindTexture, GL_TEXTURE_2D, 0);
   CHECK_GL(glUseProgram, 0);
+
+  m_numframes = m_numframes + 1;
+  if(m_numframes >= 20){
+
+    uint64_t GCPU_load, GCPU_decode, GGPU_Load, GFPS;
+
+    if(!m_GPULoad.empty()) {
+      GPU_Load = GetAverageTimeMS(m_GPULoad);
+    }
+    if(!m_TotalFps.empty()) {
+      Total_time = GetAverageTimeMS(m_TotalFps);
+    }
+    if(!m_CPUDecode.empty()) {
+      CPU_load = GetAverageTimeMS(m_CPUDecode);
+    }
+
+    //LOGI("CPU Load Time : %lld--%d\n", CPU_load, m_CPULoad.size());
+    //LOGI("CPU Decode Time: %lld--%d\n", CPU_decode, m_CPUDecode.size());
+    LOGI("GPU Load Time: %f\n", GPU_Load);
+    //LOGI("FPS: %lld--%d\n", FPS, m_TotalFps.size());
+
+    m_CPULoad.clear();
+    m_CPUDecode.clear();
+    m_GPULoad.clear();
+    m_TotalFps.clear();
+
+
+    m_numframes = 0;
+  }
+
 
 }
 

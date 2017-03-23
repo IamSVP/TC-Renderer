@@ -18,7 +18,9 @@
 #include <limits>
 #include <thread>
 #include <functional>
+#include <mutex>
 
+std::mutex global_mutex;
 
 
 static void ycocg667_to_rgb565(const int8_t *in, int8_t *out) {
@@ -531,7 +533,7 @@ void GetFrameMultiThread(std::ifstream &in_stream,
 
   }
 
-
+  global_mutex.lock();
   // If unique set then decode the current dictionary
   if(decode_info->is_unique) {
 
@@ -690,7 +692,7 @@ void GetFrameMultiThread(std::ifstream &in_stream,
      decode_info->is_unique = true;
      decode_info->curr_frame = 0;
    }
-
+   global_mutex.unlock();
   return;
 }
 

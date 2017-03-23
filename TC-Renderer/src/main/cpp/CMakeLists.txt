@@ -28,6 +28,7 @@ set(ndk_helper_dir ../../../../common/ndk_helper)
 add_subdirectory(${ndk_helper_dir} ndk_helper)
 add_subdirectory(MPTCDecoder)
 
+
 # now build app's shared lib
 add_library(TeapotNativeActivity SHARED
             SphereRenderer.cpp
@@ -50,6 +51,8 @@ target_link_libraries(TeapotNativeActivity
                       EGL
                       GLESv3
                       log
+                      mediandk
+                      OpenMAXAL
                       ndk-helper
                       mptc_decoder
                       )

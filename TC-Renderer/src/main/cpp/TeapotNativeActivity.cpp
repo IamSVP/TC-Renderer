@@ -60,7 +60,7 @@ class Engine {
   const ASensor* accelerometer_sensor_;
   ASensorEventQueue* sensor_event_queue_;
 
-  void UpdateFPS(float fFPS);
+  void UpdateFPS(float fFPS, float gpu, float total, float cpu);
   void ShowUI();
   void TransformPosition(ndk_helper::Vec2& vec);
 
@@ -159,7 +159,7 @@ int Engine::InitDisplay() {
 void Engine::DrawFrame() {
   float fps;
   if (monitor_.Update(fps)) {
-    UpdateFPS(fps);
+    UpdateFPS(fps, renderer_.ReturnGPULoad(), renderer_.ReturnTotalTime(), renderer_.ReturnCPULoad());
   }
   renderer_.Update(monitor_.GetCurrentTime());
 
@@ -357,14 +357,14 @@ void Engine::ShowUI() {
   return;
 }
 
-void Engine::UpdateFPS(float fFPS) {
+void Engine::UpdateFPS(float fFPS, float gpu, float total, float cpu) {
   JNIEnv* jni;
   app_->activity->vm->AttachCurrentThread(&jni, NULL);
 
   // Default class retrieval
   jclass clazz = jni->GetObjectClass(app_->activity->clazz);
-  jmethodID methodID = jni->GetMethodID(clazz, "updateFPS", "(F)V");
-  jni->CallVoidMethod(app_->activity->clazz, methodID, fFPS);
+  jmethodID methodID = jni->GetMethodID(clazz, "updateFPS", "(FFFF)V");
+  jni->CallVoidMethod(app_->activity->clazz, methodID, fFPS, gpu, total, cpu);
 
   app_->activity->vm->DetachCurrentThread();
   return;

@@ -82,6 +82,7 @@ bool GLContext::Init(ANativeWindow* window) {
   InitGLES();
 
   egl_context_initialized_ = true;
+  eglSwapInterval(display_, 0);
 
   return true;
 }

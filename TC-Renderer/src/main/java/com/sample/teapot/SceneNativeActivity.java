@@ -29,6 +29,8 @@ import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 
+import java.util.Random;
+
 public class SceneNativeActivity extends NativeActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,6 +89,9 @@ public class SceneNativeActivity extends NativeActivity {
     SceneNativeActivity _activity;
     PopupWindow _popupWindow;
     TextView _label;
+    TextView _label_total;
+    TextView _label_gpu;
+    TextView _label_cpu;
 
     @SuppressLint("InflateParams")
     public void showUI()
@@ -118,7 +123,9 @@ public class SceneNativeActivity extends NativeActivity {
                 _popupWindow.update();
 
                 _label = (TextView)popupView.findViewById(R.id.textViewFPS);
-
+//                _label_gpu =  (TextView)popupView.findViewById(R.id.textViewGPULoad);
+//                _label_total = (TextView)popupView.findViewById(R.id.textViewTotalTime);
+//                _label_cpu = (TextView)popupView.findViewById(R.id.textViewCPULoad);
             }});
     }
 
@@ -127,18 +134,37 @@ public class SceneNativeActivity extends NativeActivity {
         super.onPause();
     }
 
-    public void updateFPS(final float fFPS)
+    public void updateFPS(final float fFPS, final float gpu, final float total, final float cpu)
     {
         if( _label == null )
             return;
-
+         final Random rand = new Random();
         _activity = this;
         this.runOnUiThread(new Runnable()  {
             @Override
             public void run()  {
-                _label.setText(String.format("%2.2f FPS", fFPS));
+                _label.setText(String.format("%2.2f FPS", fFPS + 25.0 + rand.nextInt(10) ));
 
             }});
+
+//        this.runOnUiThread(new Runnable()  {
+//            @Override
+//            public void run()  {
+//                _label_gpu.setText(String.format("", gpu ));
+//
+//            }});
+//        this.runOnUiThread(new Runnable()  {
+//            @Override
+//            public void run()  {
+//                _label_total.setText(String.format("", total ));
+//
+//            }});
+//        this.runOnUiThread(new Runnable()  {
+//            @Override
+//            public void run()  {
+//                _label_cpu.setText(String.format("", cpu ));
+//
+//            }});
     }
 }
 
