@@ -99,8 +99,9 @@ enum TC_TYPES {
 };
 static const uint32_t vImage_width = 2560;
 static const uint32_t vImage_height = 1280;
-static const  TC_TYPES vTC_type = TC_TYPES::MPTC;
+static TC_TYPES vTC_type = TC_TYPES::MPTC;
 static const uint32_t vMax_tex_count = 480;
+static bool vLoad_texture = true;
 
 #define COMPRESSED_RGBA_ASTC_4x4 0x93B0
 #define COMPRESSED_RGBA_ASTC_8x8 0x93B7
@@ -192,7 +193,7 @@ class SphereRenderer {
   std::string _mptc_path;
   std::ofstream _metrics_out_stream;
 
-  uint64_t _texture_number;
+  uint32_t _texture_number;
 
   uint32_t _texture_width;
   uint32_t _texture_height;

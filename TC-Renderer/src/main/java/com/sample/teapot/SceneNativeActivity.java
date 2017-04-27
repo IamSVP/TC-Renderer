@@ -20,16 +20,23 @@ import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.NativeActivity;
 import android.os.Bundle;
+import android.support.annotation.IdRes;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup.MarginLayoutParams;
 import android.view.WindowManager.LayoutParams;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
+import android.widget.RadioGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.Random;
+
+import static com.sample.teapot.UILib.setAlgorithm;
 
 public class SceneNativeActivity extends NativeActivity {
     @Override
@@ -50,7 +57,7 @@ public class SceneNativeActivity extends NativeActivity {
                 }
             });
         }
-
+        currentAlgorithm = "Current Algorithm : MPTC";
     }
 
     @TargetApi(19)    
@@ -92,6 +99,8 @@ public class SceneNativeActivity extends NativeActivity {
     TextView _label_total;
     TextView _label_gpu;
     TextView _label_cpu;
+    TextView _algorithm;
+    String currentAlgorithm;
 
     @SuppressLint("InflateParams")
     public void showUI()
@@ -123,6 +132,9 @@ public class SceneNativeActivity extends NativeActivity {
                 _popupWindow.update();
 
                 _label = (TextView)popupView.findViewById(R.id.textViewFPS);
+                _algorithm = (TextView) popupView.findViewById(R.id.algorithm);
+
+
 //                _label_gpu =  (TextView)popupView.findViewById(R.id.textViewGPULoad);
 //                _label_total = (TextView)popupView.findViewById(R.id.textViewTotalTime);
 //                _label_cpu = (TextView)popupView.findViewById(R.id.textViewCPULoad);
@@ -140,31 +152,23 @@ public class SceneNativeActivity extends NativeActivity {
             return;
          final Random rand = new Random();
         _activity = this;
+
         this.runOnUiThread(new Runnable()  {
             @Override
             public void run()  {
                 _label.setText(String.format("%2.2f FPS", fFPS + 25.0 + rand.nextInt(10) ));
-
+                _algorithm.setText(currentAlgorithm);
             }});
+    }
 
-//        this.runOnUiThread(new Runnable()  {
-//            @Override
-//            public void run()  {
-//                _label_gpu.setText(String.format("", gpu ));
-//
-//            }});
-//        this.runOnUiThread(new Runnable()  {
-//            @Override
-//            public void run()  {
-//                _label_total.setText(String.format("", total ));
-//
-//            }});
-//        this.runOnUiThread(new Runnable()  {
-//            @Override
-//            public void run()  {
-//                _label_cpu.setText(String.format("", cpu ));
-//
-//            }});
+    public void setJPG(View view){
+        currentAlgorithm = "Current Algorithm : JPG";
+        setAlgorithm(5);
+    }
+
+    public void setMPTC(View view){
+        currentAlgorithm = "Current Algorithm : MPTC";
+        setAlgorithm(4);
     }
 }
 

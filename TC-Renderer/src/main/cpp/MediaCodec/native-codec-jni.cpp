@@ -207,10 +207,7 @@ void mylooper::handle(int what, void* obj) {
 }
 
 
-
-
 extern "C" {
-
 jboolean Java_com_example_nativecodec_NativeCodec_createStreamingMediaPlayer(JNIEnv* env,
         jclass clazz, jobject assetMgr, jstring filename)
 {
