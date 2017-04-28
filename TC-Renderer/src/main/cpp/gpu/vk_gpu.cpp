@@ -1118,30 +1118,30 @@ void VKGPUContext::CreateTextureSampler() {
 //                                                           //
 //////////////////////////////////////////////////////////////
 
-void HelloWorldCompute::CreateStorageBuffers() {
-
-  VkDeviceSize buffer_size = sizeof(uint32_t) * 2048;
-
-  in_values.resize(2048);
-  for(uint i = 1; i <= 2048; i++) {
-    in_values[i] = i;
-  }
-
-  CreateBuffer(buffer_size, physical_device, logical_device,
-               VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-               ssb_in, ssb_in_memory, false);
-
-  void *data;
-  vkMapMemory(logical_device, ssb_in_memory, 0, buffer_size, 0, &data);
-  memcpy(data, in_values.data(), (size_t)buffer_size);
-  vkUnmapMemory(logical_device, ssb_in_memory);
-
-  CreateBuffer(buffer_size, physical_device, logical_device,
-               VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
-               ssb_out, ssb_out_memory, false);
-}
+//void HelloWorldCompute::CreateStorageBuffers() {
+//
+//  VkDeviceSize buffer_size = sizeof(uint32_t) * 2048;
+//
+//  in_values.resize(2048);
+//  for(uint i = 1; i <= 2048; i++) {
+//    in_values[i] = i;
+//  }
+//
+//  CreateBuffer(buffer_size, physical_device, logical_device,
+//               VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+//               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+//               ssb_in, ssb_in_memory, false);
+//
+//  void *data;
+//  vkMapMemory(logical_device, ssb_in_memory, 0, buffer_size, 0, &data);
+//  memcpy(data, in_values.data(), (size_t)buffer_size);
+//  vkUnmapMemory(logical_device, ssb_in_memory);
+//
+//  CreateBuffer(buffer_size, physical_device, logical_device,
+//               VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+//               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+//               ssb_out, ssb_out_memory, false);
+//}
 
 
 

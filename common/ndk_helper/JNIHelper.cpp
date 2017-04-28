@@ -193,48 +193,7 @@ std::string JNIHelper::GetExternalFilesDir() {
   return s;
 }
 
-uint32_t JNIHelper::LoadTexture(const char* file_name) {
-  if (activity_ == NULL) {
-    LOGI(
-        "JNIHelper has not been initialized. Call init() to initialize the "
-        "helper");
-    return 0;
-  }
 
-  JNIEnv* env;
-  jmethodID mid;
-
-  pthread_mutex_lock(&mutex_);
-  activity_->vm->AttachCurrentThread(&env, NULL);
-
-  jstring name = env->NewStringUTF(file_name);
-
-  GLuint tex;
-  glGenTextures(1, &tex);
-  glBindTexture(GL_TEXTURE_2D, tex);
-
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                  GL_LINEAR_MIPMAP_NEAREST);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-  mid = env->GetMethodID(jni_helper_java_class_, "loadTexture",
-                         "(Ljava/lang/String;)Z");
-  jboolean ret = env->CallBooleanMethod(jni_helper_java_ref_, mid, name);
-  if (!ret) {
-    glDeleteTextures(1, &tex);
-    tex = -1;
-    LOGI("Texture load failed %s", file_name);
-  }
-
-  // Generate mipmap
-  glGenerateMipmap(GL_TEXTURE_2D);
-
-  env->DeleteLocalRef(name);
-  activity_->vm->DetachCurrentThread();
-  pthread_mutex_unlock(&mutex_);
-
-  return tex;
-}
 
 std::string JNIHelper::ConvertString(const char* str, const char* encode) {
   if (activity_ == NULL) {

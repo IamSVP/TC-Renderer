@@ -731,7 +731,7 @@ void SphereRenderer::Render() {
   if(load_texture)
     LoadTexture(_curr_TC_type);
 
-<<<<<<< HEAD
+
 //  if(_curr_TC_type == TC_TYPES::MPTC) {
 //    load_texture = false;
 //    load_count++;
@@ -743,7 +743,6 @@ void SphereRenderer::Render() {
  //LOGE("TC Type %d\n", _curr_TC_type);
 
     int tc_type = static_cast<int>(_curr_TC_type);
-=======
   if(_curr_TC_type == TC_TYPES::MPTC) {
     load_texture = false;
     load_count++;
@@ -753,7 +752,6 @@ void SphereRenderer::Render() {
     }
   }
 
->>>>>>> parent of dc05568... Added buttons to switch between algorithms, needs debugging
   CHECK_GL(glUseProgram, _program_id);
   CHECK_GL(glClear, GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
   CHECK_GL(glUniformMatrix4fv, _matrix_id, 1, GL_FALSE, mat_vp.Ptr());

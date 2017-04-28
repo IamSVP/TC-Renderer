@@ -1083,7 +1083,7 @@ STBIDEF stbi_uc *stbi_load(char const *filename, int *x, int *y, int *comp, int 
 STBIDEF void stbi_load_into_dst(unsigned char *dst, char const *filename, int *x, int *y, int *comp, int req_comp)
 {
 	FILE *f = stbi__fopen(filename, "rb");
-	unsigned char *result;
+	//unsigned char *result;
 	if (!f)  stbi__errpuc("can't fopen", "Unable to open file");
 	stbi_load_from_file_into_dst(dst,f, x, y, comp, req_comp);
 	fclose(f);
@@ -1106,7 +1106,7 @@ STBIDEF stbi_uc *stbi_load_from_file(FILE *f, int *x, int *y, int *comp, int req
 
 STBIDEF void stbi_load_from_file_into_dst(unsigned char *dst,FILE *f, int *x, int *y, int *comp, int req_comp)
 {
-	unsigned char *result;
+	//unsigned char *result;
 	stbi__context s;
 	stbi__start_file(&s, f);
 	stbi__load_flip_into_dst(dst, &s, x, y, comp, req_comp);

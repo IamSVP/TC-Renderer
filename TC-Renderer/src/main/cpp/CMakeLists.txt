@@ -20,7 +20,7 @@ cmake_minimum_required(VERSION 3.4.1)
 add_library(app-glue STATIC
             ${ANDROID_NDK}/sources/android/native_app_glue/android_native_app_glue.c)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -fno-exceptions -fno-rtti")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -fexceptions -fno-rtti ")
 
 
 # build the ndk-helper library
@@ -28,6 +28,7 @@ set(ndk_helper_dir ../../../../common/ndk_helper)
 add_subdirectory(${ndk_helper_dir} ndk_helper)
 add_subdirectory(MPTCDecoder)
 add_subdirectory(gpu)
+
 
 # now build app's shared lib
 add_library(TeapotNativeActivity SHARED
