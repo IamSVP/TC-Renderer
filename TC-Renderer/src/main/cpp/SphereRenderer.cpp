@@ -327,7 +327,7 @@ void SphereRenderer::LoadTextureDataMPTC() {
   m_GPULoad.push_back(GPULoad_Time.count());
 
 
-//  LOGE("curr_dxt id value:%d\n", ptr_buffer_struct->curr_dxt_idx);
+  LOGE("curr_dxt id value:%d\n", ptr_buffer_struct->curr_dxt_idx);
 
 
   std::chrono::high_resolution_clock::time_point CPUDecode_Start = std::chrono::high_resolution_clock::now();
@@ -539,7 +539,7 @@ void SphereRenderer::InitializeTexture(TC_TYPES curr_type) {
 }
 
 void SphereRenderer::LoadTexture(TC_TYPES curr_type) {
-  LOGE("CUrrent tC type: %d\n", curr_type);
+
   switch (curr_type) {
     case ASTC4x4:
       LoadTextureDataASTC4x4();
@@ -728,11 +728,10 @@ void SphereRenderer::Render() {
   //_texture_number = 5;
   _texture_number = (_texture_number + 1) % vMax_tex_count + 1;
   static bool first_frame = true;
-    _curr_TC_type = vTC_type;
-    //LOGE("Texture number %d\n", _texture_number);
   if(load_texture)
     LoadTexture(_curr_TC_type);
 
+<<<<<<< HEAD
 //  if(_curr_TC_type == TC_TYPES::MPTC) {
 //    load_texture = false;
 //    load_count++;
@@ -744,6 +743,17 @@ void SphereRenderer::Render() {
  //LOGE("TC Type %d\n", _curr_TC_type);
 
     int tc_type = static_cast<int>(_curr_TC_type);
+=======
+  if(_curr_TC_type == TC_TYPES::MPTC) {
+    load_texture = false;
+    load_count++;
+    if (load_count > 10) {
+      load_count = 1;
+      load_texture = true;
+    }
+  }
+
+>>>>>>> parent of dc05568... Added buttons to switch between algorithms, needs debugging
   CHECK_GL(glUseProgram, _program_id);
   CHECK_GL(glClear, GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
   CHECK_GL(glUniformMatrix4fv, _matrix_id, 1, GL_FALSE, mat_vp.Ptr());
@@ -764,7 +774,7 @@ void SphereRenderer::Render() {
 
   CHECK_GL(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, _index_buffer);
   CHECK_GL(glDrawElements, GL_TRIANGLES, _num_indices , GL_UNSIGNED_SHORT, NULL);
-//  LOGE("Num indices %d\n", _num_indices);
+  LOGE("Num indices %d\n", _num_indices);
   std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
   std::chrono::nanoseconds frame_time = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
   m_TotalFps.push_back(frame_time.count());
@@ -793,7 +803,7 @@ void SphereRenderer::Render() {
 
     //LOGI("CPU Load Time : %lld--%d\n", CPU_load, m_CPULoad.size());
     //LOGI("CPU Decode Time: %lld--%d\n", CPU_decode, m_CPUDecode.size());
-//    LOGI("GPU Load Time: %f\n", GPU_Load);
+    LOGI("GPU Load Time: %f\n", GPU_Load);
     //LOGI("FPS: %lld--%d\n", FPS, m_TotalFps.size());
 
     m_CPULoad.clear();
@@ -823,14 +833,4 @@ void SphereRenderer::Unload() {
   if(ptr_decode_info) delete ptr_decode_info;
   if(ptr_buffer_struct) delete ptr_buffer_struct;
 
-}
-
-extern "C" {
-JNIEXPORT void JNICALL Java_com_sample_teapot_UILib_setAlgorithm(JNIEnv *env, jclass type, jint i);
-};
-
-JNIEXPORT void JNICALL
-Java_com_sample_teapot_UILib_setAlgorithm(JNIEnv *env, jclass type, jint i) {
-    // TODO
-    vTC_type = (TC_TYPES) i;
 }

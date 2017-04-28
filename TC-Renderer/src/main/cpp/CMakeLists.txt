@@ -27,7 +27,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -fno-exceptions -fno-rt
 set(ndk_helper_dir ../../../../common/ndk_helper)
 add_subdirectory(${ndk_helper_dir} ndk_helper)
 add_subdirectory(MPTCDecoder)
-
+add_subdirectory(gpu)
 
 # now build app's shared lib
 add_library(TeapotNativeActivity SHARED

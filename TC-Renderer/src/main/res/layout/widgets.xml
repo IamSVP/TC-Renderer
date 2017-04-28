@@ -17,26 +17,6 @@
 
 
     <TextView
-        android:id="@+id/algorithm"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="TextView" />
-
-    <Button
-        android:id="@+id/mptc"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="MPTC"
-        android:onClick="setMPTC"/>
-
-    <Button
-        android:id="@+id/jpg"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="JPG"
-        android:onClick="setJPG"/>
-
-    <TextView
         android:id="@+id/textViewGPULoad"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -63,6 +43,4 @@
         android:text=""
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:textColor="@android:color/holo_red_dark" />
-
-
 </LinearLayout>
