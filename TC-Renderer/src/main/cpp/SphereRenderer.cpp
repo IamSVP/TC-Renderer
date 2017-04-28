@@ -100,18 +100,21 @@ void SphereRenderer::InitializeScene() {
 
 void SphereRenderer::InitializeFullTexture() {
 
-  CHECK_GL(glGenTextures, 1, &_texture_id);
-  CHECK_GL(glBindTexture, GL_TEXTURE_2D, _texture_id);
+  int type = static_cast<int>(TC_TYPES::JPG);
+  CHECK_GL(glGenTextures, 1, &_texture_id[type]);
+  CHECK_GL(glBindTexture, GL_TEXTURE_2D, _texture_id[type]);
   // CHECK_GL(glTexImage2D, GL_TEXTURE_2D,0,GL_RGBA8UI, vImageWidth, vImageHeight,0,GL_RGBA_INTEGER,GL_UNSIGNED_BYTE,NULL);
   CHECK_GL(glTexStorage2D, GL_TEXTURE_2D, 1, GL_RGBA8,vImage_width, vImage_height );
   CHECK_GL(glTexParameteri,GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
   CHECK_GL(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  CHECK_GL(glBindImageTexture, 2, _texture_id, 0, GL_FALSE,0, GL_WRITE_ONLY, GL_RGBA8UI); // possible error
+  CHECK_GL(glBindImageTexture, 2, _texture_id[type], 0, GL_FALSE,0, GL_WRITE_ONLY, GL_RGBA8UI); // possible error
   CHECK_GL(glBindTexture, GL_TEXTURE_2D, 0);
 }
 void SphereRenderer::InitializeDXT1Texuture() {
-  CHECK_GL(glGenTextures, 1, &_texture_id);
-  CHECK_GL(glBindTexture, GL_TEXTURE_2D, _texture_id);
+
+  int type = static_cast<int>(TC_TYPES::DXT1);
+  CHECK_GL(glGenTextures, 1, &_texture_id[type]);
+  CHECK_GL(glBindTexture, GL_TEXTURE_2D, _texture_id[type]);
   CHECK_GL(glTexStorage2D, GL_TEXTURE_2D, 1, COMPRESSED_RGB_DXT1, vImage_width, vImage_height);
   CHECK_GL(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   CHECK_GL(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -120,8 +123,9 @@ void SphereRenderer::InitializeDXT1Texuture() {
 }
 void SphereRenderer::InitializeCRNTexture() {
 
-  CHECK_GL(glGenTextures, 1, &_texture_id);
-  CHECK_GL(glBindTexture, GL_TEXTURE_2D, _texture_id);
+  int type = static_cast<int>(TC_TYPES::CRN);
+  CHECK_GL(glGenTextures, 1, &_texture_id[type]);
+  CHECK_GL(glBindTexture, GL_TEXTURE_2D, _texture_id[type]);
   CHECK_GL(glTexStorage2D, GL_TEXTURE_2D, 1, COMPRESSED_RGB_DXT1, vImage_width, vImage_height);
   CHECK_GL(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   CHECK_GL(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -129,8 +133,9 @@ void SphereRenderer::InitializeCRNTexture() {
 }
 void SphereRenderer::InitializeASTC8x8Texture() {
 
-  CHECK_GL(glGenTextures, 1, &_texture_id);
-  CHECK_GL(glBindTexture, GL_TEXTURE_2D, _texture_id);
+  int type = static_cast<int>(TC_TYPES::ASTC8x8);
+  CHECK_GL(glGenTextures, 1, &_texture_id[type]);
+  CHECK_GL(glBindTexture, GL_TEXTURE_2D, _texture_id[type]);
   CHECK_GL(glTexStorage2D, GL_TEXTURE_2D, 1, COMPRESSED_RGBA_ASTC_8x8, vImage_width, vImage_height);
   CHECK_GL(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   CHECK_GL(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -139,8 +144,9 @@ void SphereRenderer::InitializeASTC8x8Texture() {
 }
 void SphereRenderer::InitializeASTC4x4Texture() {
 
-  CHECK_GL(glGenTextures, 1, &_texture_id);
-  CHECK_GL(glBindTexture, GL_TEXTURE_2D, _texture_id);
+  int type = static_cast<int>(TC_TYPES::ASTC4x4);
+  CHECK_GL(glGenTextures, 1, &_texture_id[type]);
+  CHECK_GL(glBindTexture, GL_TEXTURE_2D, _texture_id[type]);
   CHECK_GL(glTexStorage2D, GL_TEXTURE_2D, 1, COMPRESSED_RGBA_ASTC_4x4, vImage_width, vImage_height);
   CHECK_GL(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   CHECK_GL(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -148,8 +154,9 @@ void SphereRenderer::InitializeASTC4x4Texture() {
 }
 void SphereRenderer::InitializeMPTCTexture() {
 
-  CHECK_GL(glGenTextures, 1, &_texture_id);
-  CHECK_GL(glBindTexture, GL_TEXTURE_2D, _texture_id);
+  int type = static_cast<int>(TC_TYPES::MPTC);
+  CHECK_GL(glGenTextures, 1, &_texture_id[type]);
+  CHECK_GL(glBindTexture, GL_TEXTURE_2D, _texture_id[type]);
   CHECK_GL(glTexStorage2D, GL_TEXTURE_2D, 1, COMPRESSED_RGB_DXT1, vImage_width, vImage_height);
   CHECK_GL(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   CHECK_GL(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -171,13 +178,14 @@ void SphereRenderer::InitializeMPTCTexture() {
 
 void SphereRenderer::InitializeMPEGTexture() {
 
-  CHECK_GL(glGenTextures, 1, &_texture_id);
-  CHECK_GL(glBindTexture, GL_TEXTURE_2D, _texture_id);
+  int type = static_cast<int>(TC_TYPES::MPEG);
+  CHECK_GL(glGenTextures, 1, &_texture_id[type]);
+  CHECK_GL(glBindTexture, GL_TEXTURE_2D, _texture_id[type]);
   // CHECK_GL(glTexImage2D, GL_TEXTURE_2D,0,GL_RGBA8UI, vImageWidth, vImageHeight,0,GL_RGBA_INTEGER,GL_UNSIGNED_BYTE,NULL);
   CHECK_GL(glTexStorage2D, GL_TEXTURE_2D, 1, GL_RGBA8,vImage_width, vImage_height );
   CHECK_GL(glTexParameteri,GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
   CHECK_GL(glTexParameteri, GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  CHECK_GL(glBindImageTexture, 2, _texture_id, 0, GL_FALSE,0, GL_WRITE_ONLY, GL_RGBA8UI); // possible error
+  CHECK_GL(glBindImageTexture, 2, _texture_id[type], 0, GL_FALSE,0, GL_WRITE_ONLY, GL_RGBA8UI); // possible error
   CHECK_GL(glBindTexture, GL_TEXTURE_2D, 0);
 
   int fd = open(_mpeg_file_path.c_str(), O_RDONLY);
@@ -228,6 +236,7 @@ void SphereRenderer::InitializeMPEGTexture() {
 }
 void SphereRenderer::LoadTextureDataASTC4x4() {
 
+  int tc_type = static_cast<int>(TC_TYPES::ASTC4x4);
   unsigned char *blocks;
   size_t  TexSz = _texture_height * _texture_width;
   blocks = (unsigned char *)malloc( sizeof(unsigned char) * TexSz);
@@ -263,7 +272,7 @@ void SphereRenderer::LoadTextureDataASTC4x4() {
 
   // GPU Loading........
   std::chrono::high_resolution_clock::time_point GPULoad_Start = std::chrono::high_resolution_clock::now();
-  CHECK_GL(glBindTexture, GL_TEXTURE_2D, _texture_id);
+  CHECK_GL(glBindTexture, GL_TEXTURE_2D, _texture_id[tc_type]);
   CHECK_GL(glCompressedTexSubImage2D, GL_TEXTURE_2D,    // Type of texture
            0,                // level (0 being the top level i.e. full size)
            0, 0,             // Offset
@@ -301,9 +310,9 @@ void SphereRenderer::LoadTextureDataMPTC() {
 //  GetFrame(_mptc_stream, prev_dxt, curr_dxt, ptr_decode_info);
 
 
-
+  int tc_type = static_cast<int>(TC_TYPES::MPTC);
   std::chrono::high_resolution_clock::time_point GPULoad_Start = std::chrono::high_resolution_clock::now();
-  CHECK_GL(glBindTexture, GL_TEXTURE_2D, _texture_id);
+  CHECK_GL(glBindTexture, GL_TEXTURE_2D, _texture_id[tc_type]);
   CHECK_GL(glCompressedTexSubImage2D, GL_TEXTURE_2D,    // Type of texture
            0,                // level (0 being the top level i.e. full size)
            0, 0,             // Offset
@@ -339,6 +348,8 @@ void SphereRenderer::LoadTextureDataMPTC() {
 
 void SphereRenderer::LoadTextureDataJPG() {
   char img_path[256];
+
+  int tc_type = static_cast<int>(TC_TYPES::JPG);
   //sprintf(img_path, "%s/360MegaCoaster720/JPG/360MegaCoaster720%06d.jpg",_texture_path.c_str(),_texture_number);
   sprintf(img_path, "%s/360MegaC2K/JPG/360MegaC2K%03d.jpg", _texture_path.c_str(), _texture_number);
   LOGE("Path%s", img_path);
@@ -368,7 +379,7 @@ void SphereRenderer::LoadTextureDataJPG() {
 
   // GPU Loading........
   std::chrono::high_resolution_clock::time_point GPULoad_Start = std::chrono::high_resolution_clock::now();
-  CHECK_GL(glBindTexture, GL_TEXTURE_2D, _texture_id);
+  CHECK_GL(glBindTexture, GL_TEXTURE_2D, _texture_id[tc_type]);
 
   CHECK_GL(glTexSubImage2D, GL_TEXTURE_2D,
            0,
@@ -395,7 +406,7 @@ void SphereRenderer::LoadTextureDataMPEG() {
   ssize_t outbufidx = -1;
   uint8_t *TextureData = NULL;
   size_t TexSz = 0;
-
+  int tc_type = static_cast<int>(TC_TYPES::MPEG);
   std::chrono::high_resolution_clock::time_point CPU_start =
     std::chrono::high_resolution_clock::now();
 
@@ -462,7 +473,7 @@ void SphereRenderer::LoadTextureDataMPEG() {
 
       LOGI("Checking frame size %lld\n", TexSz);
       std::chrono::high_resolution_clock::time_point GPULoad_Start = std::chrono::high_resolution_clock::now();
-      CHECK_GL(glBindTexture, GL_TEXTURE_2D, _texture_id);
+      CHECK_GL(glBindTexture, GL_TEXTURE_2D, _texture_id[tc_type]);
 
       CHECK_GL(glTexSubImage2D, GL_TEXTURE_2D,
                0,
@@ -673,7 +684,10 @@ void SphereRenderer::Init(const char* storage_path) {
 
   LoadShaders(vVertexProg, vFragProg);
   InitializeScene();
-  InitializeTexture(_curr_TC_type);
+  //InitializeTexture(_curr_TC_type);
+  InitializeMPTCTexture();
+  InitializeDXT1Texuture();
+  InitializeFullTexture();
   UpdateViewport();
   CHECK_GL(glGenQueries, 2, GPULoadQuery);
 
@@ -719,23 +733,23 @@ void SphereRenderer::Render() {
   if(load_texture)
     LoadTexture(_curr_TC_type);
 
-  if(_curr_TC_type == TC_TYPES::MPTC) {
-    load_texture = false;
-    load_count++;
-    if (load_count > 10) {
-      load_count = 1;
-      load_texture = true;
-    }
-  }
+//  if(_curr_TC_type == TC_TYPES::MPTC) {
+//    load_texture = false;
+//    load_count++;
+//    if (load_count > 10) {
+//      load_count = 1;
+//      load_texture = true;
+//    }
+//  }
  //LOGE("TC Type %d\n", _curr_TC_type);
 
-
+    int tc_type = static_cast<int>(_curr_TC_type);
   CHECK_GL(glUseProgram, _program_id);
   CHECK_GL(glClear, GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
   CHECK_GL(glUniformMatrix4fv, _matrix_id, 1, GL_FALSE, mat_vp.Ptr());
 
   CHECK_GL(glActiveTexture, GL_TEXTURE0);
-  CHECK_GL(glBindTexture, GL_TEXTURE_2D, _texture_id);
+  CHECK_GL(glBindTexture, GL_TEXTURE_2D, _texture_id[tc_type]);
 
 
   CHECK_GL(glEnableVertexAttribArray, _pos_loc);
@@ -799,7 +813,9 @@ void SphereRenderer::Unload() {
   CHECK_GL(glDeleteBuffers, 1, &_uv_buffer);
   CHECK_GL(glDeleteBuffers, 1, &_index_buffer);
   CHECK_GL(glDeleteProgram, _program_id);
-  CHECK_GL(glDeleteTextures, 1, &_texture_id);
+  CHECK_GL(glDeleteTextures, 1, &_texture_id[TC_TYPES::JPG]);
+  CHECK_GL(glDeleteTextures, 1, &_texture_id[TC_TYPES::MPTC]);
+  CHECK_GL(glDeleteTextures, 1, &_texture_id[TC_TYPES::DXT1]);
   //CHECK_GL(glDeleteBuffers, 2, m_PboId);
   CHECK_GL(glDeleteVertexArrays, 1, &_vertex_array_id);
   //if(curr_dxt) delete [] curr_dxt;

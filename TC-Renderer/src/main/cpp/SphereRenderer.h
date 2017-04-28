@@ -184,7 +184,7 @@ class SphereRenderer {
   GLuint _uv_buffer;
   GLuint _vertex_array_id;
 
-  GLuint _texture_id;
+  GLuint _texture_id[11];
   GLuint GPULoadQuery[2];
 
   std::string _texture_path;
