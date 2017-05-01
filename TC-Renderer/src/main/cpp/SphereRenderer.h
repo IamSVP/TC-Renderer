@@ -99,7 +99,7 @@ enum TC_TYPES {
 };
 static const uint32_t vImage_width = 2560;
 static const uint32_t vImage_height = 1280;
-static const  TC_TYPES vTC_type = TC_TYPES::MPTC;
+static TC_TYPES vTC_type = TC_TYPES::MPTC;
 static const uint32_t vMax_tex_count = 480;
 
 #define COMPRESSED_RGBA_ASTC_4x4 0x93B0

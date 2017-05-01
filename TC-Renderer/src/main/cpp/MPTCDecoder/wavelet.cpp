@@ -153,7 +153,7 @@ extern void InverseWavelet2D(const int16_t *src, size_t src_rowbytes,
   }
 
   Transpose(dst, dim, dst_rowbytes);
-  if(scratch != NULL) delete scratch;
+  if(scratch != NULL) delete[] scratch;
 }
 
 }

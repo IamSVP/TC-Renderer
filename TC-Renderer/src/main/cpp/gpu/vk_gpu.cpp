@@ -6,7 +6,8 @@
 #include "vk_gpu.h"
 #include "vk_guards.h"
 #include "vk_utils.h"
-#include "../../../../../../Library/Android/sdk/ndk-bundle/sources/third_party/vulkan/src/include/vulkan/vulkan.h"
+
+#include "/home/psrihariv/Android/Sdk/ndk-bundle/sources/third_party/vulkan/src/include/vulkan/vulkan.h"
 #include "vulkan_wrapper.h"
 #include <android/log.h>
 #include <android_native_app_glue.h>
@@ -27,7 +28,7 @@ static const char* kTAG = "vk_gpu.cpp";
 #define LOGE(...) \
   ((void)__android_log_print(ANDROID_LOG_ERROR, kTAG, __VA_ARGS__))
 
-//FIXME::put in the proper shaders and shit
+//FIXME::put in the proper shaders and stuff
 
 #define VERTEX_SHADER_SPIRV_PATH "shaders/vert."
 #define FRAGMENT_SHADER_SPIRV_PATH "shaders/frag."

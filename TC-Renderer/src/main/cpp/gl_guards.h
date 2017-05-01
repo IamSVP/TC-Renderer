@@ -33,7 +33,7 @@ static const char* getGLErrString(GLenum err){
       if(NULL != errString){                                                         \
         LOGE("OpenGL call Error (%s : %d): %s\n",__FILE__, __LINE__, errString);    \
       } else {                                                                       \
-        LOGE("Unknown OpenGL call Error(%s : %d): %s\n", __FILE__);                 \
+        LOGE("Unknown OpenGL call Error(%s : %d)\n", __FILE__, __LINE__);                 \
        }                                                                             \
       assert(false);                                                                 \
     }                                                                                \

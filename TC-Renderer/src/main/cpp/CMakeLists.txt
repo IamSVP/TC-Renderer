@@ -19,7 +19,7 @@ cmake_minimum_required(VERSION 3.4.1)
 # build native_app_glue as a static lib
 add_library(app-glue STATIC
             ${ANDROID_NDK}/sources/android/native_app_glue/android_native_app_glue.c)
-
+include_directories(${ANDROID_SDK})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -fexceptions -fno-rtti ")
 
 

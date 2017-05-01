@@ -31,6 +31,8 @@ import android.widget.TextView;
 
 import java.util.Random;
 
+import static com.sample.teapot.UILib.setAlgorithm;
+
 public class SceneNativeActivity extends NativeActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,6 +94,8 @@ public class SceneNativeActivity extends NativeActivity {
     TextView _label_total;
     TextView _label_gpu;
     TextView _label_cpu;
+    TextView _algorithm;
+    String currentAlgorithm;
 
     @SuppressLint("InflateParams")
     public void showUI()
@@ -123,6 +127,7 @@ public class SceneNativeActivity extends NativeActivity {
                 _popupWindow.update();
 
                 _label = (TextView)popupView.findViewById(R.id.textViewFPS);
+                _algorithm = (TextView)popupView.findViewById(R.id.algorithm);
 //                _label_gpu =  (TextView)popupView.findViewById(R.id.textViewGPULoad);
 //                _label_total = (TextView)popupView.findViewById(R.id.textViewTotalTime);
 //                _label_cpu = (TextView)popupView.findViewById(R.id.textViewCPULoad);
@@ -144,6 +149,7 @@ public class SceneNativeActivity extends NativeActivity {
             @Override
             public void run()  {
                 _label.setText(String.format("%2.2f FPS", fFPS + 25.0 + rand.nextInt(10) ));
+                _algorithm.setText(currentAlgorithm);
 
             }});
 
@@ -165,6 +171,21 @@ public class SceneNativeActivity extends NativeActivity {
 //                _label_cpu.setText(String.format("", cpu ));
 //
 //            }});
+    }
+
+    public void setJPG(View view){
+        currentAlgorithm = "Current Algorithm : JPG";
+        setAlgorithm(5);
+    }
+
+    public void setMPTC(View view){
+        currentAlgorithm = "Current Algorithm : MPTC";
+        setAlgorithm(4);
+    }
+
+    public  void setDXT(View view) {
+        currentAlgorithm = "Current Algorithm : DXT";
+        setAlgorithm(3);
     }
 }
 
