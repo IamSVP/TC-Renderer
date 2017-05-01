@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="top"
@@ -20,22 +20,84 @@
         android:id="@+id/algorithm"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="TextView" />
+        android:text="TextView"
+        android:layout_below="@+id/textViewFPS"
+        android:layout_toEndOf="@+id/textViewGPULoad" />
 
     <Button
         android:id="@+id/mptc"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="MPTC"
-        android:onClick="setMPTC"/>
+        android:onClick="setMPTC"
+        android:layout_below="@+id/algorithm"
+        android:layout_toEndOf="@+id/textViewGPULoad" />
 
     <Button
         android:id="@+id/jpg"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="JPG"
-        android:onClick="setJPG"/>
+        android:onClick="setJPG"
+        android:layout_alignBaseline="@+id/mptc"
+        android:layout_alignBottom="@+id/mptc"
+        android:layout_toEndOf="@+id/mptc" />
 
+    <Button
+        android:id="@+id/ASTC4X4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ASTC 4X4"
+        android:onClick="setASTC4X4"
+        android:layout_alignTop="@+id/jpg"
+        android:layout_toEndOf="@+id/jpg" />
+
+    <Button
+        android:id="@+id/ASTC8X8"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ASTC8X8"
+        android:onClick="setASTC8X8"
+        android:layout_alignBaseline="@+id/ASTC4X4"
+        android:layout_alignBottom="@+id/ASTC4X4"
+        android:layout_toEndOf="@+id/ASTC4X4" />
+
+    <Button
+        android:id="@+id/ASTC12X12"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ASTC12X12"
+        android:onClick="setASTC12X12"
+        android:layout_below="@+id/mptc"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:id="@+id/DXT1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="DXT1"
+        android:onClick="setDXT1"
+        android:layout_alignBaseline="@+id/ASTC12X12"
+        android:layout_alignBottom="@+id/ASTC12X12"
+        android:layout_toEndOf="@+id/ASTC12X12" />
+
+    <Button
+        android:id="@+id/CRN"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="CRN"
+        android:onClick="setCRN"
+        android:layout_below="@+id/ASTC4X4"
+        android:layout_toEndOf="@+id/DXT1" />
+
+    <Button
+        android:id="@+id/MPEG"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="MPEG"
+        android:onClick="setMPEG"
+        android:layout_below="@+id/ASTC8X8"
+        android:layout_toEndOf="@+id/CRN" />
     <TextView
         android:id="@+id/textViewGPULoad"
         android:layout_width="wrap_content"
@@ -65,4 +127,4 @@
         android:textColor="@android:color/holo_red_dark" />
 
 
-</LinearLayout>
+</RelativeLayout>

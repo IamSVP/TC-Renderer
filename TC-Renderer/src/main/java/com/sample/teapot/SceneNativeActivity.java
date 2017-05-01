@@ -170,6 +170,36 @@ public class SceneNativeActivity extends NativeActivity {
         currentAlgorithm = "Current Algorithm : MPTC";
         setAlgorithm(4);
     }
+
+    public void setASTC4X4(View view) {
+        currentAlgorithm = "Current Algorithm : ASTC 4x4";
+        setAlgorithm(0);
+    }
+
+    public void setASTC8X8(View view) {
+        currentAlgorithm = "Current Algorithm : ASTC 8x8";
+        setAlgorithm(1);
+    }
+
+    public void setASTC12X12(View view) {
+        currentAlgorithm = "Current Algorithm : ASTC 12x12";
+        setAlgorithm(2);
+    }
+
+    public void setDXT1(View view) {
+        currentAlgorithm = "Current Algorithm : DXT1";
+        setAlgorithm(3);
+    }
+
+    public void setCRN(View view) {
+        currentAlgorithm = "Current Algorithm : CRN";
+        setAlgorithm(6);
+    }
+
+    public void setMPEG(View view) {
+        currentAlgorithm = "Current Algorithm : MPEG";
+        setAlgorithm(7);
+    }
 }
 
 
