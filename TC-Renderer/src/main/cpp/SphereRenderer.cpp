@@ -294,7 +294,65 @@ void SphereRenderer::LoadTextureDataASTC4x4() {
 }
 void SphereRenderer::LoadTextureDataASTC8x8() { }
 void SphereRenderer::LoadTextureDataCRN() { }
-void SphereRenderer::LoadTextureDataDXT1() { }
+void SphereRenderer::LoadTextureDataDXT1() {
+
+    int tc_type = static_cast<int>(TC_TYPES::DXT1);
+    unsigned char *blocks;
+    blocks = (unsigned char *)malloc( sizeof(unsigned char) * (_texture_height * _texture_width)/2);
+    if(blocks == NULL)
+        LOGE("Block is NULL\n");
+    char img_path[256];
+
+    sprintf(img_path, "%s/360MegaCoaster2k/DXT1/360MegaCoaster2k%06d.DXT1",_texture_path.c_str(), _texture_number);
+    LOGE("Path %s", img_path);
+
+    FILE *fp = fopen(img_path, "rb");
+
+
+
+    std::chrono::high_resolution_clock::time_point CPULoad_Start = std::chrono::high_resolution_clock::now();
+    fread(blocks, 1, (_texture_width * _texture_height)/2, fp);
+    std::chrono::high_resolution_clock::time_point CPULoad_End = std::chrono::high_resolution_clock::now();
+
+    std::chrono::nanoseconds CPULoad_Time = std::chrono::duration_cast<std::chrono::nanoseconds>(CPULoad_End - CPULoad_Start);
+    m_CPULoad.push_back(CPULoad_Time.count());
+
+
+
+//    CHECK_GL(glBindBuffer, GL_PIXEL_UNPACK_BUFFER, m_PboId[0]);
+//
+//    blocks = (GLubyte*)CHECK_GL(glMapBufferRange, GL_PIXEL_UNPACK_BUFFER, 0, (vImageHeight * vImageWidth)/2, GL_WRITE_ONLY);
+//    if(blocks){
+//
+//        input.read(blocks, (vImageHeight * vImageWidth)/2);
+//        CHECK_GL(glUnmapBuffer, GL_PIXEL_UNPACK_BUFFER);
+//    }
+
+    // GPU Loading........
+    std::chrono::high_resolution_clock::time_point GPULoad_Start = std::chrono::high_resolution_clock::now();
+    CHECK_GL(glBindTexture, GL_TEXTURE_2D, _texture_id[tc_type]);
+    CHECK_GL(glCompressedTexSubImage2D, GL_TEXTURE_2D,    // Type of texture
+             0,                // level (0 being the top level i.e. full size)
+             0, 0,             // Offset
+             _texture_width,       // Width of the texture
+             _texture_height,      // Height of the texture,
+             COMPRESSED_RGB_DXT1,          // Data format
+             _texture_width * _texture_height / 2, // Type of texture data
+             blocks);
+
+    std::chrono::high_resolution_clock ::time_point GPULoad_End = std::chrono::high_resolution_clock::now();
+    std::chrono::nanoseconds GPULoad_Time = std::chrono::duration_cast<std::chrono::nanoseconds>(GPULoad_End - GPULoad_Start);
+    m_GPULoad.push_back(GPULoad_Time.count());
+
+    // CHECK_GL(glBindBuffer, GL_PIXEL_UNPACK_BUFFER, 0);
+    // ALOGE("fooooddd here\n");
+    CHECK_GL(glBindTexture, GL_TEXTURE_2D, 0);
+    free(blocks);
+    fclose(fp);
+
+
+
+}
 void SphereRenderer::LoadTextureDataMPTC() {
 
   //*****************ADD CHRONO****************//
