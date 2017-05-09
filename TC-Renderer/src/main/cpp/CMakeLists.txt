@@ -20,8 +20,8 @@ cmake_minimum_required(VERSION 3.4.1)
 add_library(app-glue STATIC
             ${ANDROID_NDK}/sources/android/native_app_glue/android_native_app_glue.c)
 include_directories(${ANDROID_SDK})
+include_directories(${ANDROID_NDK})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -fexceptions -fno-rtti ")
-
 
 # build the ndk-helper library
 set(ndk_helper_dir ../../../../common/ndk_helper)
@@ -34,7 +34,7 @@ add_subdirectory(gpu)
 add_library(TeapotNativeActivity SHARED
             SphereRenderer.cpp
             TeapotNativeActivity.cpp
-            TeapotRenderer.cpp)
+            )
 
 target_include_directories(TeapotNativeActivity PRIVATE
                            ${ANDROID_NDK}/sources/android/cpufeatures

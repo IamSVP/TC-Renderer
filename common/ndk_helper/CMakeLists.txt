@@ -4,7 +4,6 @@ add_library(ndk-helper STATIC
             interpolator.cpp
             JNIHelper.cpp
             perfMonitor.cpp
-            shader.cpp
             tapCamera.cpp
             vecmath.cpp)
 

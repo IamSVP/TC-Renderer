@@ -20,14 +20,19 @@ import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.NativeActivity;
 import android.os.Bundle;
+import android.support.annotation.IdRes;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup.MarginLayoutParams;
 import android.view.WindowManager.LayoutParams;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
+import android.widget.RadioGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.Random;
 
@@ -46,16 +51,16 @@ public class SceneNativeActivity extends NativeActivity {
             View decorView = getWindow().getDecorView();
             decorView.setOnSystemUiVisibilityChangeListener
                     (new View.OnSystemUiVisibilityChangeListener() {
-                @Override
-                public void onSystemUiVisibilityChange(int visibility) {
-                    setImmersiveSticky();
-                }
-            });
+                        @Override
+                        public void onSystemUiVisibilityChange(int visibility) {
+                            setImmersiveSticky();
+                        }
+                    });
         }
-
+        currentAlgorithm = "Current Algorithm : MPTC";
     }
 
-    @TargetApi(19)    
+    @TargetApi(19)
     protected void onResume() {
         super.onResume();
 
@@ -77,7 +82,7 @@ public class SceneNativeActivity extends NativeActivity {
     }
     // Our popup window, you will call it from your C/C++ code later
 
-    @TargetApi(19)    
+    @TargetApi(19)
     void setImmersiveSticky() {
         View decorView = getWindow().getDecorView();
         decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN
@@ -109,8 +114,8 @@ public class SceneNativeActivity extends NativeActivity {
             @Override
             public void run()  {
                 LayoutInflater layoutInflater
-                = (LayoutInflater)getBaseContext()
-                .getSystemService(LAYOUT_INFLATER_SERVICE);
+                        = (LayoutInflater)getBaseContext()
+                        .getSystemService(LAYOUT_INFLATER_SERVICE);
                 View popupView = layoutInflater.inflate(R.layout.widgets, null);
                 _popupWindow = new PopupWindow(
                         popupView,
@@ -127,7 +132,9 @@ public class SceneNativeActivity extends NativeActivity {
                 _popupWindow.update();
 
                 _label = (TextView)popupView.findViewById(R.id.textViewFPS);
-                _algorithm = (TextView)popupView.findViewById(R.id.algorithm);
+                _algorithm = (TextView) popupView.findViewById(R.id.algorithm);
+
+
 //                _label_gpu =  (TextView)popupView.findViewById(R.id.textViewGPULoad);
 //                _label_total = (TextView)popupView.findViewById(R.id.textViewTotalTime);
 //                _label_cpu = (TextView)popupView.findViewById(R.id.textViewCPULoad);
@@ -143,34 +150,15 @@ public class SceneNativeActivity extends NativeActivity {
     {
         if( _label == null )
             return;
-         final Random rand = new Random();
+        final Random rand = new Random();
         _activity = this;
+
         this.runOnUiThread(new Runnable()  {
             @Override
             public void run()  {
                 _label.setText(String.format("%2.2f FPS", fFPS + 25.0 + rand.nextInt(10) ));
                 _algorithm.setText(currentAlgorithm);
-
             }});
-
-//        this.runOnUiThread(new Runnable()  {
-//            @Override
-//            public void run()  {
-//                _label_gpu.setText(String.format("", gpu ));
-//
-//            }});
-//        this.runOnUiThread(new Runnable()  {
-//            @Override
-//            public void run()  {
-//                _label_total.setText(String.format("", total ));
-//
-//            }});
-//        this.runOnUiThread(new Runnable()  {
-//            @Override
-//            public void run()  {
-//                _label_cpu.setText(String.format("", cpu ));
-//
-//            }});
     }
 
     public void setJPG(View view){
@@ -183,10 +171,34 @@ public class SceneNativeActivity extends NativeActivity {
         setAlgorithm(4);
     }
 
-    public  void setDXT(View view) {
-        currentAlgorithm = "Current Algorithm : DXT";
+    public void setASTC4X4(View view) {
+        currentAlgorithm = "Current Algorithm : ASTC 4x4";
+        setAlgorithm(0);
+    }
+
+    public void setASTC8X8(View view) {
+        currentAlgorithm = "Current Algorithm : ASTC 8x8";
+        setAlgorithm(1);
+    }
+
+    public void setASTC12X12(View view) {
+        currentAlgorithm = "Current Algorithm : ASTC 12x12";
+        setAlgorithm(2);
+    }
+
+    public void setDXT1(View view) {
+        currentAlgorithm = "Current Algorithm : DXT1";
         setAlgorithm(3);
     }
-}
 
+    public void setCRN(View view) {
+        currentAlgorithm = "Current Algorithm : CRN";
+        setAlgorithm(6);
+    }
+
+    public void setMPEG(View view) {
+        currentAlgorithm = "Current Algorithm : MPEG";
+        setAlgorithm(7);
+    }
+}
 

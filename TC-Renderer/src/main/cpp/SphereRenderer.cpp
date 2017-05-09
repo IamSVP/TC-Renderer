@@ -786,10 +786,12 @@ void SphereRenderer::Render() {
   ndk_helper::Mat4 mat_vp = _mat_projection * _mat_view;
   //_texture_number = 5;
   _texture_number = (_texture_number + 1) % vMax_tex_count + 1;
-  static bool first_frame = true;
-  if(load_texture)
-    LoadTexture(_curr_TC_type);
 
+
+  _curr_TC_type = vTC_type;
+  //LOGE("Texture number %d\n", _texture_number);
+  if(load_texture || _curr_TC_type != TC_TYPES::MPTC)
+    LoadTexture(_curr_TC_type);
 
 //  if(_curr_TC_type == TC_TYPES::MPTC) {
 //    load_texture = false;
@@ -892,3 +894,12 @@ void SphereRenderer::Unload() {
 
 }
 
+extern "C" {
+JNIEXPORT void JNICALL Java_com_sample_teapot_UILib_setAlgorithm(JNIEnv *env, jclass type, jint i);
+};
+
+JNIEXPORT void JNICALL
+Java_com_sample_teapot_UILib_setAlgorithm(JNIEnv *env, jclass type, jint i) {
+  // TODO
+  vTC_type = (TC_TYPES) i;
+}

@@ -3,7 +3,10 @@
 # build native_app_glue as a static lib
 set(APP_GLUE_DIR ${ANDROID_NDK}/sources/android/native_app_glue)
 include_directories(${APP_GLUE_DIR})
-include_directories(../glm)
+include_directories(${ANDROID_SDK})
+include_directories(${CMAKE_SOURCE_DIR}$/glm)
+
+MESSAGE(STATUS "CMAKE_SOURCEE_DIR: " ${CMAKE_SOURCE_DIR}/glm)
 set(VK_SRC_DIR ${ANDROID_NDK}/sources/third_party/vulkan/src)
 
 include_directories(${VK_SRC_DIR}/include)

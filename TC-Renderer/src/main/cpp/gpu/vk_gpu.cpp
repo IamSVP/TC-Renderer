@@ -5,9 +5,8 @@
 
 #include "vk_gpu.h"
 #include "vk_guards.h"
-#include "vk_utils.h"
 
-#include "/home/psrihariv/Android/Sdk/ndk-bundle/sources/third_party/vulkan/src/include/vulkan/vulkan.h"
+#include "vulkan/vulkan.h"
 #include "vulkan_wrapper.h"
 #include <android/log.h>
 #include <android_native_app_glue.h>
@@ -66,12 +65,17 @@ struct QueueFamilyIndices {
   int32_t graphics_family = -1;
   int32_t present_family = -1;
   int32_t transfer_family = -1;
+  int32_t compute_family = - 1;
 
   bool IsComplete() {
-    return graphics_family >= 0 && present_family >= 0;
+    return graphics_family >= 0 && present_family >= 0 && compute_family >= 0
+     && transfer_family >= 0;
   }
 
 };
+
+
+QueueFamilyIndices vIndices;
 
 QueueFamilyIndices VKGPUContext::FindQueueFamilies(VkPhysicalDevice device) {
   QueueFamilyIndices indices;
@@ -81,7 +85,8 @@ QueueFamilyIndices VKGPUContext::FindQueueFamilies(VkPhysicalDevice device) {
   vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_families.data());
   int32_t i = 0;
   for(const auto& queue_family : queue_families) {
-    if(queue_family.queueCount > 0 && (queue_family.queueFlags & VK_QUEUE_GRAPHICS_BIT)) {
+    if(queue_family.queueCount > 0 && (queue_family.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+        && (queue_family.queueFlags & VK_QUEUE_COMPUTE_BIT)) {
       indices.graphics_family = i;
     }
     VkBool32 presentation_support = false;
@@ -90,12 +95,14 @@ QueueFamilyIndices VKGPUContext::FindQueueFamilies(VkPhysicalDevice device) {
       indices.present_family = i;
 
 
-    if(indices.IsComplete()) {
+    if(indices.graphics_family >= 0 && indices.present_family >=0) {
       break;
     }
     i++;
   }
 
+
+  //Find Transfer Family
   i = 0;
   for(const auto &queue_family : queue_families) {
     if(queue_family.queueCount > 0 &&
@@ -107,11 +114,48 @@ QueueFamilyIndices VKGPUContext::FindQueueFamilies(VkPhysicalDevice device) {
       break;
     i++;
   }
+
+  if(indices.transfer_family < 0) {
+   for(const auto &queue_family : queue_families) {
+    if(queue_family.queueCount > 0 &&
+       (queue_family.queueFlags & VK_QUEUE_TRANSFER_BIT)) {
+      indices.transfer_family = i;
+    }
+    if(indices.transfer_family > 0)
+      break;
+    i++;
+   }
+  }
+
+  //Find Compute Family
+  i = 0;
+  for(const auto &queue_family : queue_families) {
+    if(queue_family.queueCount > 0 &&
+       (queue_family.queueFlags & VK_QUEUE_COMPUTE_BIT) &&
+       ((queue_family.queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0)) {
+      indices.compute_family = i;
+    }
+    if(indices.compute_family > 0)
+      break;
+    i++;
+  }
+
+  if(indices.compute_family < 0) {
+   for(const auto &queue_family : queue_families) {
+    if(queue_family.queueCount > 0 &&
+       (queue_family.queueFlags & VK_QUEUE_COMPUTE_BIT)) {
+      indices.compute_family = i;
+    }
+    if(indices.compute_family > 0)
+      break;
+    i++;
+   }
+  }
+
   return indices;
 }
 
 
-QueueFamilyIndices vIndices;
 bool VKGPUContext::IsDeviceSuitable(VkPhysicalDevice device) {
 
   //All the devices are same on android and support everything
@@ -181,6 +225,7 @@ void VKGPUContext::CreateLogicalDevice() {
   }
   CHECK_VK(vkCreateDevice,_physical_device, &create_info, nullptr, _logical_device.replace());
   vkGetDeviceQueue(_logical_device, indices.graphics_family, 0, &_graphics_queue);
+  vkGetDeviceQueue(_logical_device, indices.compute_family, 0, &_comp_queue);
   vkGetDeviceQueue(_logical_device, indices.present_family, 0, &_present_queue);
   vkGetDeviceQueue(_logical_device, indices.transfer_family, 0, &_transfer_queue);
 }
@@ -349,6 +394,11 @@ void VKGPUContext::CreateImageViews() {
 //********End Swap Chain Creation Functions************//
 ////////////////////////////////////////////////////////
 
+
+
+
+
+
 ////////////////////////////////////////////////////////
 //////// Render Pass and Graphics Pipeline /////////////
 ///////////////////////////////////////////////////////
@@ -511,7 +561,6 @@ void VKGPUContext::CreateGraphicsPipeline() {
   dynamic_state.pDynamicStates = dynamic_states;
 
   // 8. Pipeline Layout
-
   VkDescriptorSetLayout set_layouts[] = {_descriptor_set_layout};
   VkPipelineLayoutCreateInfo pipeline_layout_info = {};
   pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -613,7 +662,72 @@ void VKGPUContext::CreateDescriptorSetLayout() {
                                  nullptr, _descriptor_set_layout.replace());
 }
 
+void VKGPUContext::CreateDescriptorPool() {
+  std::array<VkDescriptorPoolSize, 2> pool_sizes = {};
+  pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  pool_sizes[0].descriptorCount = 1;
+  pool_sizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  pool_sizes[1].descriptorCount = 1;
 
+  VkDescriptorPoolCreateInfo pool_info = {};
+  pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+  pool_info.poolSizeCount = pool_sizes.size();
+  pool_info.pPoolSizes = pool_sizes.data();
+  pool_info.maxSets = 1;
+
+  CHECK_VK(vkCreateDescriptorPool, _logical_device, &pool_info, nullptr, _descriptor_pool.replace());
+
+}
+
+void VKGPUContext::CreateDescriptorSets() {
+
+  VkDescriptorSetLayout layouts[] = {_descriptor_set_layout};
+  VkDescriptorSetAllocateInfo alloc_info = {};
+  alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+  alloc_info.descriptorPool = _descriptor_pool;
+  alloc_info.descriptorSetCount = 1;
+  alloc_info.pSetLayouts = layouts;
+
+  CHECK_VK(vkAllocateDescriptorSets, _logical_device, &alloc_info, &_descriptor_set);
+
+  VkDescriptorBufferInfo buffer_info = {};
+  buffer_info.buffer = _uniform_buffer;
+  buffer_info.offset = 0;
+  buffer_info.range = sizeof(UniformBufferObject);
+
+  VkDescriptorImageInfo image_info = {};
+  image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  image_info.imageView = _texture_image_view;
+  image_info.sampler = _texture_sampler;
+
+  std::array<VkWriteDescriptorSet, 2> descriptor_writes = {};
+  descriptor_writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  descriptor_writes[0].dstSet = _descriptor_set;
+  //note this binding too
+  descriptor_writes[0].dstBinding = 0;
+  descriptor_writes[0].dstArrayElement = 0;
+  descriptor_writes[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  descriptor_writes[0].descriptorCount = 1;
+  descriptor_writes[0].pBufferInfo = &buffer_info;
+  descriptor_writes[0].pImageInfo = nullptr;
+  descriptor_writes[0].pTexelBufferView = nullptr;
+
+
+  descriptor_writes[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  descriptor_writes[1].dstSet = _descriptor_set;
+  //note this binding too
+  descriptor_writes[1].dstBinding = 1;
+  descriptor_writes[1].dstArrayElement = 0;
+  descriptor_writes[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  descriptor_writes[1].descriptorCount = 1;
+  descriptor_writes[1].pBufferInfo = nullptr;
+  descriptor_writes[1].pImageInfo = &image_info;
+  descriptor_writes[1].pTexelBufferView = nullptr;
+
+  vkUpdateDescriptorSets(_logical_device, descriptor_writes.size(),
+                         descriptor_writes.data(), 0, nullptr);
+
+}
 ///////////////////////////////////////////////////////////
 // *********End of descriptor set layouts and stuff**** //
 /////////////////////////////////////////////////////////
@@ -660,6 +774,8 @@ void VKGPUContext::CreateCommandBuffers() {
   command_buffer_alloc_info.commandBufferCount = static_cast<uint32_t>(_command_buffers.size());
 
   CHECK_VK(vkAllocateCommandBuffers, _logical_device, &command_buffer_alloc_info, _command_buffers.data());
+
+
   for(size_t i = 0; i < _command_buffers.size(); i++) {
     VkCommandBufferBeginInfo begin_info = {};
     begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -693,7 +809,7 @@ void VKGPUContext::CreateCommandBuffers() {
     vkCmdBindDescriptorSets(_command_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
                             _pipeline_layout, 0, 1, &_descriptor_set, 0, nullptr);
 
-    vkCmdDrawIndexed(_command_buffers[i], indices.size(), 1, 0, 0, 0);
+    vkCmdDrawIndexed(_command_buffers[i], _indices.size(), 1, 0, 0, 0);
 
     vkCmdEndRenderPass(_command_buffers[i]);
     CHECK_VK(vkEndCommandBuffer, _command_buffers[i]);
@@ -859,7 +975,6 @@ void VKGPUContext::CreateTextureImage() {
 
   /*vkUnmapMemory(logical_device, staging_image_memory);*/
 
-
   CreateImage(tex_width, tex_height,
               VK_FORMAT_R8G8B8A8_UNORM,
               VK_IMAGE_TILING_LINEAR,
@@ -868,9 +983,6 @@ void VKGPUContext::CreateTextureImage() {
               VK_IMAGE_LAYOUT_UNDEFINED,
               _texture_image,
               _texture_image_memory);
-
-
-
 
 }
 
@@ -1119,6 +1231,76 @@ void VKGPUContext::CreateTextureSampler() {
 //                                                           //
 //////////////////////////////////////////////////////////////
 
+/////////////////////////////////////////////////
+//     Buffer and device memory creation       //
+////////////////////////////////////////////////
+
+void VKGPUContext::CreateBuffer(VkDeviceSize size,
+                    VkBufferUsageFlags usage,
+                    VkMemoryPropertyFlags properties,
+                    VDeleter<VkBuffer> & buffer,
+                    VDeleter<VkDeviceMemory>& buffer_memory,
+                    bool is_transfer) {
+
+  uint32_t pIndices[2] = {static_cast<uint32_t>(vIndices.graphics_family),
+                          static_cast<uint32_t>(vIndices.transfer_family)};
+
+  VkBufferCreateInfo buffer_info = {};
+  buffer_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+  buffer_info.size = size;
+  buffer_info.usage = usage;
+
+  if(is_transfer) {
+    buffer_info.sharingMode = VK_SHARING_MODE_CONCURRENT;
+    buffer_info.queueFamilyIndexCount = 2;
+    buffer_info.pQueueFamilyIndices = pIndices;
+  }
+  else {
+    buffer_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+  }
+
+  CHECK_VK(vkCreateBuffer, _logical_device, &buffer_info, nullptr, buffer.replace());
+
+  VkMemoryRequirements mem_requirements;
+  vkGetBufferMemoryRequirements(_logical_device, buffer, &mem_requirements);
+
+  VkMemoryAllocateInfo alloc_info = {};
+  alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+  alloc_info.allocationSize = mem_requirements.size;
+  alloc_info.memoryTypeIndex = FindMemoryType(_physical_device, mem_requirements.memoryTypeBits,
+                                              properties);
+
+  CHECK_VK(vkAllocateMemory, _logical_device, &alloc_info, nullptr, buffer_memory.replace());
+
+  vkBindBufferMemory(_logical_device, buffer, buffer_memory, 0);
+
+
+}
+
+void VKGPUContext::CopyBuffer(VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size) {
+
+  VkCommandBuffer command_buffer = BeginSingleTimeCommands();
+
+  VkBufferCopy copy_region = {};
+  copy_region.srcOffset = 0;
+  copy_region.dstOffset = 0;
+  copy_region.size = size;
+
+  vkCmdCopyBuffer(command_buffer, src_buffer, dst_buffer, 1, &copy_region);
+
+  EndSingleTimeCommands(command_buffer, _graphics_queue);
+  return;
+
+}
+
+/////////////////////////////////////////////////
+//    End of Buffer and device memory creation //
+////////////////////////////////////////////////
+
+
+
+
+
 //void HelloWorldCompute::CreateStorageBuffers() {
 //
 //  VkDeviceSize buffer_size = sizeof(uint32_t) * 2048;
@@ -1146,7 +1328,88 @@ void VKGPUContext::CreateTextureSampler() {
 
 
 
+void VKGPUContext::CreateSemaphores() {
 
+  VkSemaphoreCreateInfo create_info = {};
+  create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+  CHECK_VK(vkCreateSemaphore, _logical_device, &create_info, nullptr, _image_available_semaphore.replace());
+  CHECK_VK(vkCreateSemaphore, _logical_device, &create_info, nullptr, _rendering_finished_semaphore.replace());
+
+}
+
+
+
+/////////////////////////////////////////////////
+////       Methods to set geometry            //
+///////////////////////////////////////////////
+void VKGPUContext::CreateVertexBuffers() {
+  VkDeviceSize buffer_size = sizeof(_vertices[0]) * _vertices.size();
+  VDeleter<VkBuffer> staging_buffer{_logical_device, vkDestroyBuffer};
+  VDeleter<VkDeviceMemory> staging_buffer_memory{_logical_device, vkFreeMemory};
+  CreateBuffer(buffer_size,
+               VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+               staging_buffer, staging_buffer_memory, true);
+  void *data;
+  vkMapMemory(_logical_device, staging_buffer_memory, 0, buffer_size, 0, &data);
+  memcpy(data, _vertices.data(), (size_t) buffer_size);
+  vkUnmapMemory(_logical_device, staging_buffer_memory);
+  CreateBuffer(buffer_size,
+               VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+               VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, _vertex_buffer, _vertex_buffer_memory, true);
+  CopyBuffer(staging_buffer, _vertex_buffer, buffer_size);
+  return;
+}
+
+void VKGPUContext::CreateIndexBuffers(){
+
+  VkDeviceSize buffer_size = sizeof(_indices[0]) * _indices.size();
+
+  VDeleter<VkBuffer> staging_buffer{_logical_device, vkDestroyBuffer};
+  VDeleter<VkDeviceMemory> staging_buffer_memory{_logical_device, vkFreeMemory};
+
+  CreateBuffer(buffer_size,
+               VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+               staging_buffer, staging_buffer_memory, true);
+
+  void *data;
+  vkMapMemory(_logical_device, staging_buffer_memory, 0, buffer_size, 0 , &data);
+  memcpy(data, _indices.data(), (size_t)buffer_size);
+  vkUnmapMemory(_logical_device, staging_buffer_memory);
+
+  CreateBuffer(buffer_size,
+               VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+               VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, _index_buffer, _index_buffer_memory, true);
+
+  CopyBuffer(staging_buffer, _index_buffer, buffer_size);
+
+  return;
+
+
+}
+
+void VKGPUContext::CreateUniformbuffers() {
+
+  VkDeviceSize buffer_size = sizeof(UniformBufferObject);
+
+  CreateBuffer(buffer_size,
+               VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+               _uniform_staging_buffer, _uniform_staging_buffer_memory, true);
+
+  CreateBuffer(buffer_size,
+               VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+               VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+               _uniform_buffer, _uniform_buffer_memory, true);
+
+}
+
+
+/////////////////////////////////////////////////
+////******End Methods to set geometry*********//
+///////////////////////////////////////////////
 
 
 }
